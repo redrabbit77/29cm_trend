@@ -1,0 +1,45 @@
+# Core dependencies
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Web interface
+streamlit>=1.28.0
+
+# Database
+supabase>=2.0.0
+postgrest>=0.13.0
+
+# Browser automation
+playwright>=1.40.0
+
+# Human behavior simulation
+pyautogui>=0.9.54
+pyperclip>=1.8.2
+
+# HTTP client
+httpx>=0.25.0
+
+# Utilities
+rich>=13.0.0
+typer>=0.9.0
+
+# Data processing
+pandas>=2.0.0
+
+# PDF analysis (상품 PDF 텍스트 추출)
+pdfplumber>=0.10.0
+
+# LLM 기반 상품 상세정보 추출 (선택)
+openai>=1.0.0
+
+# Gemini 3.0 Pro 기본 데이터·이미지 분석 (선택)
+google-genai>=1.0.0
+google-generativeai>=0.8.0
+pymupdf>=1.24.0
+
+# Visualization
+plotly>=5.17.0
+
+# Spec-driven development
+speckit-ai>=0.2.4
