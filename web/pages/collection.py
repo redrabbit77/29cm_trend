@@ -89,10 +89,15 @@ def _parse_progress_file() -> dict:
 
 def render() -> None:
     """수집 관리 UI 렌더링."""
-    st.title("데이터 수집 관리")
+    try:
+        from web.utils.global_style import inject_global_style, page_header
+        inject_global_style()
+    except Exception:
+        pass
 
-    # ----- PDF 수집: 전체 수집 / 카테고리별 수집 -----
-    st.subheader("PDF 수집")
+    page_header("데이터 수집", "29CM 베스트 상품 상세 페이지를 A5 PDF로 수집합니다.")
+
+    st.markdown("## PDF 수집")
     st.caption(
         "29cm 방문 → 베스트 메뉴 클릭 → 카테고리별 1~100위 상품 상세 페이지를 A5 PDF로 저장. "
         "전체 수집 또는 카테고리별 수집을 선택할 수 있습니다. "
@@ -183,7 +188,7 @@ def render() -> None:
             st.error(f"PDF 수집 시작 실패: {e}")
 
     # ----- PDF 수집 진행 상황 (그래픽 + 로그) -----
-    st.subheader("PDF 수집 진행 상황")
+    st.markdown("## PDF 수집 진행 상황")
     prog = _parse_progress_file()
     total_saved = prog["total_saved"]
     estimated_total = prog["estimated_total"]

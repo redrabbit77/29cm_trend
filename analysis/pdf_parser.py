@@ -303,8 +303,12 @@ def analyze_pdf(
         for key in (
             "의류종류", "이미지_무드", "이미지_톤", "이미지_촬영", "이미지_배경", "이미지_요약",
             "사진_구성", "모델_특징", "제품_특징", "브랜드_평",
+            "톤_무드", "촬영_특징", "룩북_촬영_배경_무드", "모델링_포즈_특징", "컬러_팔레트", "디자인_컨셉_분석", "상세_리뷰", "리뷰_의견",
+            "대표색",
         ):
             r.setdefault(key, "")
+        for key in ("스타일_축", "프리미엄_축"):
+            r.setdefault(key, None)
         r["_analysis_engine"] = "rule_based"
         r["_analysis_model"] = ""
         r["_analysis_error"] = last_gemini_meta.get("error") or ""
@@ -326,6 +330,7 @@ def analyze_pdf(
                     result["_analysis_engine"] = "gemini"
                     result["_analysis_model"] = meta.get("model_id", "")
                     result["_analysis_error"] = meta.get("error") or ""
+                    result["_api_request_sent"] = meta.get("_api_request_sent", True)
                     return result
             except Exception as e:
                 last_gemini_meta = {"model_id": "", "success": False, "error": str(e)[:200]}
@@ -342,6 +347,7 @@ def analyze_pdf(
                     result["_analysis_engine"] = "gemini"
                     result["_analysis_model"] = meta.get("model_id", "")
                     result["_analysis_error"] = meta.get("error") or ""
+                    result["_api_request_sent"] = meta.get("_api_request_sent", True)
                     return result
             except Exception as e:
                 last_gemini_meta = {"model_id": "", "success": False, "error": str(e)[:200]}

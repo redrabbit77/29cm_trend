@@ -48,6 +48,9 @@ pdfs/
 collected_data/
 logs/
 *.log
+data/settings/google_sheets_credentials.json
+data/settings/google_sheets_cred_path.txt
+data/settings/google_sheet_id.txt
 
 # Supabase
 .supabase/
