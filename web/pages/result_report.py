@@ -127,13 +127,39 @@ def render() -> None:
                 title="브랜드 맵 (스타일 × 프리미엄)",
                 xaxis_title="스타일 축 ← 클래식/페미닌 · 시크/미니멀/스트릿 →",
                 yaxis_title="프리미엄 축 ← 데일리 · 프리미엄 →",
-                xaxis=dict(range=[-5, 105], zeroline=True),
-                yaxis=dict(range=[-5, 105], zeroline=True),
+                # 줌/팬 활성화를 위해 고정 범위 설정 대신 초기 범위만 제안하거나, fixedrange=False(기본값) 유지
+                xaxis=dict(range=[-5, 105], zeroline=True, fixedrange=False),
+                yaxis=dict(range=[-5, 105], zeroline=True, fixedrange=False),
                 showlegend=False,
                 height=500,
                 margin=dict(b=60, t=50),
+                dragmode="pan",  # 기본 드래그 모드를 팬(이동)으로 설정
             )
-            st.plotly_chart(fig, use_container_width=True)
+            
+            # 클릭(선택) 이벤트 처리
+            # Streamlit 1.35.0+ on_select 기능 사용
+            event = st.plotly_chart(
+                fig, 
+                use_container_width=True, 
+                on_select="rerun", 
+                selection_mode="points",
+                key="brand_map_chart"
+            )
+
+            # 선택된 포인트가 있으면 페이지 이동 처리
+            if event and event.selection and event.selection.points:
+                try:
+                    point = event.selection.points[0]
+                    # 포인트 인덱스로 브랜드명 찾기
+                    if point.point_index is not None and point.point_index < len(names):
+                        selected_brand = names[point.point_index]
+                        st.session_state["brand_review_target"] = selected_brand
+                        if hasattr(st, "query_params"):
+                            st.query_params["brand"] = selected_brand
+                        st.switch_page("pages/brand_review.py")
+                except Exception:
+                    pass
+            
             with st.expander("브랜드별 집계 데이터"):
                 st.dataframe(
                     [{"브랜드": b["brand_name"], "스타일_축": b["style_axis"], "프리미엄_축": b["premium_axis"], "상품 수": b["item_count"], "순위": b["rank"], "평균가격": b.get("avg_price")} for b in brand_map_data],
@@ -229,13 +255,34 @@ def render() -> None:
                     title="브랜드 맵 (수동 매칭 테이블)",
                     xaxis_title="스타일 축 ← 클래식/페미닌 · 시크/미니멀/스트릿 →",
                     yaxis_title="프리미엄 축 ← 데일리 · 프리미엄 →",
-                    xaxis=dict(range=[-5, 105], zeroline=True),
-                    yaxis=dict(range=[-5, 105], zeroline=True),
+                    xaxis=dict(range=[-5, 105], zeroline=True, fixedrange=False),
+                    yaxis=dict(range=[-5, 105], zeroline=True, fixedrange=False),
                     showlegend=False,
                     height=500,
                     margin=dict(b=60, t=50),
+                    dragmode="pan",
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                
+                # 수동 맵 클릭 이벤트 처리
+                event_manual = st.plotly_chart(
+                    fig, 
+                    use_container_width=True,
+                    on_select="rerun",
+                    selection_mode="points",
+                    key="brand_map_manual_chart"
+                )
+                
+                if event_manual and event_manual.selection and event_manual.selection.points:
+                    try:
+                        point = event_manual.selection.points[0]
+                        if point.point_index is not None and point.point_index < len(names):
+                            selected_brand = names[point.point_index]
+                            st.session_state["brand_review_target"] = selected_brand
+                            if hasattr(st, "query_params"):
+                                st.query_params["brand"] = selected_brand
+                            st.switch_page("pages/brand_review.py")
+                    except Exception:
+                        pass
     else:
         st.caption("**매칭 테이블 불러오기 (자동 집계)**를 누르면 현재 분석 결과로 브랜드별 테이블이 채워집니다.")
 

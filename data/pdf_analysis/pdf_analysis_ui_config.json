@@ -1,0 +1,8 @@
+{
+  "request_delay_sec": 2,
+  "use_rule_base_only": false,
+  "use_llm": false,
+  "use_gemini": true,
+  "gemini_model_id": "gemini-3-pro-preview",
+  "use_gemini_vision": true
+}
