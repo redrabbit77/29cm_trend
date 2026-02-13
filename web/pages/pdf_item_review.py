@@ -197,22 +197,54 @@ def render_dashboard(data: list[dict]) -> None:
     st.subheader("상품 목록")
     st.caption("항목을 클릭하면 상세 리뷰·편집 페이지로 이동합니다. 썸네일이 없으면 아래 버튼으로 일괄 생성하세요.")
     pdf_base = _get_pdf_base()
-    if st.button("목록 썸네일 일괄 생성 (대표이미지)", key="gen_thumbnails"):
-        n = 0
-        with st.spinner("PDF 첫 페이지를 썸네일로 저장 중..."):
-            for r in data:
+    
+    col_btn1, col_btn2 = st.columns([1, 1])
+    with col_btn1:
+        if st.button("목록 썸네일 일괄 생성 (대표이미지)", key="gen_thumbnails"):
+            n = 0
+            with st.spinner("PDF 첫 페이지를 썸네일로 저장 중..."):
+                for r in data:
+                    source = (r.get("source_pdf") or "").replace("\\", "/")
+                    if not source:
+                        continue
+                    if _thumbnail_path(source, pdf_base):
+                        continue
+                    pdf_path = pdf_base / source
+                    if pdf_path.exists():
+                        slug = _slug_from_source(source)
+                        if _render_thumbnail_local(pdf_path, slug, OUTPUT_DIR, dpi=120):
+                            n += 1
+            st.success(f"썸네일 {n}개 생성 완료.")
+            st.rerun()
+            
+    with col_btn2:
+        if st.button("모든 이미지 일괄 생성 (대표+상세) - 배포 전 권장", key="gen_all_images"):
+            n = 0
+            total = len(data)
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            for i, r in enumerate(data):
                 source = (r.get("source_pdf") or "").replace("\\", "/")
                 if not source:
                     continue
-                if _thumbnail_path(source, pdf_base):
-                    continue
+                
                 pdf_path = pdf_base / source
+                status_text.text(f"처리 중 ({i+1}/{total}): {source}")
+                progress_bar.progress((i + 1) / total)
+                
                 if pdf_path.exists():
-                    slug = _slug_from_source(source)
-                    if _render_thumbnail_local(pdf_path, slug, OUTPUT_DIR, dpi=120):
+                    # _get_product_images_with_labels 내부에서 이미지가 부족하면 자동 생성함
+                    try:
+                        _get_product_images_with_labels(pdf_path, OUTPUT_DIR)
                         n += 1
-        st.success(f"썸네일 {n}개 생성 완료.")
-        st.rerun()
+                    except Exception:
+                        pass
+            
+            status_text.empty()
+            progress_bar.empty()
+            st.success(f"총 {n}개 항목 이미지 확인 및 생성 완료. (data/pdf_analysis/product_images 폴더를 확인하세요)")
+            st.rerun()
 
     need_rerun_for_thumb = False
     for i, r in enumerate(data):
