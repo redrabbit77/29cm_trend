@@ -45,18 +45,27 @@ def _render_thumbnail_local(pdf_path: Path, slug: str, out_dir: Path, dpi: int =
 
 
 def _get_pdf_base() -> Path:
-    """수집 시 지정한 PDF 저장 경로. 없으면 프로젝트/pdfs."""
+    """수집 시 지정한 PDF 저장 경로. 없으면 프로젝트/pdfs.
+    Cloud 배포 시 로컬 절대 경로(C:\...)가 저장되어 있으면 무시하고 기본 경로 사용.
+    """
+    default_path = (_PROJECT_ROOT / "pdfs").resolve()
     if PDF_BASE_PATH_FILE.exists():
         try:
             raw = PDF_BASE_PATH_FILE.read_text(encoding="utf-8").strip()
             if raw:
+                # 1. 저장된 경로가 실제로 존재하는지 확인
                 p = Path(raw)
                 if p.is_absolute():
-                    return p
-                return (_PROJECT_ROOT / p).resolve()
+                    if p.exists():
+                        return p
+                else:
+                    resolved = (_PROJECT_ROOT / p).resolve()
+                    if resolved.exists():
+                        return resolved
+                # 2. 존재하지 않으면(예: 로컬 윈도우 경로를 클라우드에서 읽음), 기본 경로 사용
         except Exception:
             pass
-    return (_PROJECT_ROOT / "pdfs").resolve()
+    return default_path
 
 EDIT_KEYS = [
     "상품명", "브랜드명", "상세_카테고리명", "의류종류", "가격", "소재", "케어방법",
@@ -290,28 +299,44 @@ def render_detail(data: list[dict], index: int) -> None:
     st.subheader(display_name)
     st.caption(f"PDF: {source_pdf}")
 
+    labeled_images = []
+    # 이미지 먼저 로드 시도 (PDF 파일 유무와 관계없이)
+    try:
+        labeled_images = _get_product_images_with_labels(pdf_path, OUTPUT_DIR)
+    except Exception:
+        labeled_images = []
+
     if not pdf_path.exists():
-        st.warning(f"PDF 파일을 찾을 수 없습니다: {pdf_path}")
+        if labeled_images:
+            st.info("⚠️ PDF 원본 파일은 없지만, 미리보기 이미지를 표시합니다. (Cloud 배포 모드)")
+        else:
+            st.warning(f"PDF 파일을 찾을 수 없습니다: {pdf_path}")
     else:
         st.markdown("---")
         st.markdown("**대표 · 상세 이미지** (PDF에서 이미지 영역만 캡처)")
-        with st.spinner("이미지 불러오는 중..."):
-            labeled_images = _get_product_images_with_labels(pdf_path, OUTPUT_DIR)
-        if not labeled_images:
-            st.caption("이미지를 추출할 수 없습니다. PyMuPDF(fitz) 설치 여부를 확인하세요.")
-        else:
-            rep = [p for p, label in labeled_images if label == "대표"]
-            detail = [p for p, label in labeled_images if label == "상세"]
-            if rep:
-                st.markdown("###### 대표 이미지")
-                st.image(str(rep[0]), use_container_width=True)
-            if detail:
-                st.markdown("###### 상세 이미지")
-                n = len(detail)
-                cols = st.columns(min(4, n))
-                for idx, p in enumerate(detail):
-                    with cols[idx % len(cols)]:
-                        st.image(str(p), use_container_width=True)
+    
+    # 이미지 표시 로직 (들여쓰기 주의)
+    if not labeled_images and pdf_path.exists():
+        # 위에서 로드 실패했으나 PDF는 있는 경우 다시 시도? (위에서 이미 했음)
+        st.caption("이미지를 추출할 수 없습니다. PyMuPDF(fitz) 설치 여부를 확인하세요.")
+    elif labeled_images:
+        # 이미지 표시
+        if not pdf_path.exists():
+             st.markdown("---")
+             st.markdown("**대표 · 상세 이미지**")
+        
+        rep = [p for p, label in labeled_images if label == "대표"]
+        detail = [p for p, label in labeled_images if label == "상세"]
+        if rep:
+            st.markdown("###### 대표 이미지")
+            st.image(str(rep[0]), use_container_width=True)
+        if detail:
+            st.markdown("###### 상세 이미지")
+            n = len(detail)
+            cols = st.columns(min(4, n))
+            for idx, p in enumerate(detail):
+                with cols[idx % len(cols)]:
+                    st.image(str(p), use_container_width=True)
 
     st.markdown("---")
     st.markdown("**분석 내용 및 리뷰 의견**")
