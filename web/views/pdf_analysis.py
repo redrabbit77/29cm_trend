@@ -440,7 +440,7 @@ def render() -> None:
         st.caption(f"현재 **{selected_count}개** 파일이 분석 대상으로 선택되어 있습니다.")
 
         st.markdown("### PDF 수동 이미지 추출")
-        st.caption("PDF 분석을 다시 실행하지 않고, **선택한 PDF**에서 대표/상세 **이미지 영역만** 추출합니다. 페이지 단위가 아니라 이미지만 캡처해 **PDF 상품 리뷰**의 썸네일·상세 이미지로 사용할 수 있습니다.")
+        st.caption("PDF 분석을 다시 실행하지 않고, **선택한 PDF**에서 대표/상세 **이미지 영역만** 추출합니다. 페이지 단위가 아니라 이미지만 캡처해 **상품 리뷰**의 썸네일·상세 이미지로 사용할 수 있습니다.")
         if st.button("선택 PDF에서 이미지만 추출", key="pdf_manual_image_extract"):
             selected_pdfs = [all_pdfs[i] for i in range(total) if checked[i]]
             if not selected_pdfs:
@@ -468,7 +468,7 @@ def render() -> None:
                     progress.progress(1.0, text="이미지 추출 완료")
                     status_box.markdown("✅ **이미지 추출이 완료되었습니다.**")
                     if done:
-                        st.success(f"**{done}개** PDF에서 이미지 추출 완료. `data/pdf_analysis/product_images/` 에 저장되었습니다. **PDF 상품 리뷰**에서 썸네일·상세 이미지로 확인하세요.")
+                        st.success(f"**{done}개** PDF에서 이미지 추출 완료. `data/pdf_analysis/product_images/` 에 저장되었습니다. **상품 리뷰**에서 썸네일·상세 이미지로 확인하세요.")
                     for err in errors[:5]:
                         st.warning(err)
                     if len(errors) > 5:
@@ -835,7 +835,7 @@ def render() -> None:
 
     # 리뷰/편집 안내 및 이동
     st.markdown("## 리뷰 / 편집")
-    st.caption("각 항목별 분석 내용 검토·추가 의견 편집 및 PDF 대표/상세 이미지 기반 리뷰 작성은 **PDF 상품 리뷰** 페이지에서 할 수 있습니다.")
+    st.caption("각 항목별 분석 내용 검토·추가 의견 편집 및 PDF 대표/상세 이미지 기반 리뷰 작성은 **상품 리뷰** 페이지에서 할 수 있습니다.")
     rev_col1, rev_col2 = st.columns([2, 1])
     with rev_col1:
         review_options = [
@@ -852,7 +852,7 @@ def render() -> None:
         if st.button("해당 항목 리뷰 페이지로", key="go_review"):
             st.session_state["pdf_review_item_index"] = review_sel
             st.switch_page("pages/pdf_item_review.py")
-    st.caption("좌측 메뉴에서 **PDF 상품 리뷰**를 선택해도 됩니다.")
+    st.caption("좌측 메뉴에서 **상품 리뷰**를 선택해도 됩니다.")
 
     st.markdown("## DB 반영 및 브랜드 맵")
     st.caption("**PDF 분석이 완료되면 자동으로 Supabase에 반영됩니다.** 수동으로 다시 반영하려면 아래 'DB에 반영' 버튼을 사용하세요. Gemini로 브랜드 맵(JSON)을 생성할 수도 있습니다.")

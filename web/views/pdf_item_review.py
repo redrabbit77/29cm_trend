@@ -309,6 +309,22 @@ def render_dashboard(data: list[dict]) -> None:
         st.rerun()
 
 
+def _handle_back_to_list():
+    st.session_state["pdf_review_item_index"] = None
+    st.session_state["pdf_review_edit_mode"] = False
+    if hasattr(st, "query_params"):
+        try:
+            if "item" in st.query_params:
+                del st.query_params["item"]
+            st.query_params["list"] = "1"
+        except Exception:
+            pass
+    st.rerun()
+
+def _handle_edit_mode():
+    st.session_state["pdf_review_edit_mode"] = True
+    st.rerun()
+
 def render_detail(data: list[dict], index: int) -> None:
     """상세 리뷰: 읽기 전용 또는 편집 폼. 편집 버튼 → 편집 모드, 저장 버튼 → 저장."""
     item = data[index]
@@ -317,25 +333,15 @@ def render_detail(data: list[dict], index: int) -> None:
     pdf_path = pdf_base / source_pdf
     edit_mode = st.session_state.get("pdf_review_edit_mode", False)
 
-    # 상단: 목록으로(뒤로가기), (편집 | 저장)
-    top1, top2, top3 = st.columns([1, 1, 2])
-    with top1:
-        if st.button("← 목록으로", type="primary", key="back_to_list"):
-            st.session_state["pdf_review_item_index"] = None
-            st.session_state["pdf_review_edit_mode"] = False
-            if hasattr(st, "query_params"):
-                try:
-                    if "item" in st.query_params:
-                        del st.query_params["item"]
-                    st.query_params["list"] = "1"
-                except Exception:
-                    pass
-                st.rerun()
-    with top2:
+    # 상단 버튼 (아이콘 형태)
+    col_nav1, col_nav2 = st.columns([0.1, 0.9])
+    with col_nav1:
+        if st.button("🔙", type="primary", key="back_to_list_top", help="목록으로"):
+            _handle_back_to_list()
+    with col_nav2:
         if not edit_mode:
-            if st.button("편집"):
-                st.session_state["pdf_review_edit_mode"] = True
-                st.rerun()
+            if st.button("✏️", key="edit_mode_top", help="편집"):
+                _handle_edit_mode()
         else:
             st.caption("아래 폼을 수정한 뒤 **저장** 버튼을 누르세요.")
 
@@ -409,6 +415,15 @@ def render_detail(data: list[dict], index: int) -> None:
                 "값": st.column_config.TextColumn("값", width="large"),
             },
         )
+        
+        st.markdown("---")
+        col_nav_b1, col_nav_b2 = st.columns([0.1, 0.9])
+        with col_nav_b1:
+            if st.button("🔙", type="primary", key="back_to_list_bottom_read", help="목록으로"):
+                _handle_back_to_list()
+        with col_nav_b2:
+            if st.button("✏️", key="edit_mode_bottom_read", help="편집"):
+                _handle_edit_mode()
         return
 
     # 편집 모드: 폼으로 입력 후 저장 버튼으로 제출
@@ -448,6 +463,10 @@ def render_detail(data: list[dict], index: int) -> None:
                 st.rerun()
             except Exception as e:
                 st.error(f"저장 실패: {e}")
+                
+    st.markdown("---")
+    if st.button("🔙", type="primary", key="back_to_list_bottom_edit", help="목록으로"):
+        _handle_back_to_list()
 
 
 def render() -> None:
@@ -457,7 +476,7 @@ def render() -> None:
     except Exception:
         pass
 
-    page_header("PDF 상품 리뷰", "목록에서 항목을 선택해 상세를 보고, 편집 후 저장할 수 있습니다.")
+    page_header("상품 리뷰", "목록에서 항목을 선택해 상세를 보고, 편집 후 저장할 수 있습니다.")
 
     if not JSON_PATH.exists():
         st.info("분석 결과가 없습니다. 먼저 **PDF 분석** 페이지에서 'PDF 분석 실행'을 실행해 주세요.")
