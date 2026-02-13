@@ -79,10 +79,22 @@ ARRAY_KEYS = ("사이즈", "색상")
 
 
 def _slug_from_source(source_pdf: str) -> str:
-    """source_pdf(상대 경로)로부터 product_images 하위 폴더명 생성. Windows 비허용 문자 제거."""
-    p = Path((source_pdf or "").replace("\\", "/"))
-    parts = list(p.parent.parts) + [p.stem] if p.parent.parts else [p.stem]
+    """source_pdf로부터 간결한 슬러그(폴더명) 생성.
+    절대 경로가 포함되어도 '상위폴더_파일명' 형태로만 생성하여 개인정보 노출 및 경로 지저분함 방지.
+    예: C:/Users/.../Top/Shirt.pdf -> Top_Shirt
+    """
+    if not source_pdf:
+        return "unknown"
+    p = Path((source_pdf).replace("\\", "/"))
+    
+    parts = []
+    # 바로 상위 폴더명이 있으면 추가 (카테고리 구분용)
+    if p.parent.name and p.parent.name != p.anchor: # 드라이브 문자(C:) 제외
+        parts.append(p.parent.name)
+    parts.append(p.stem)
+    
     slug = "_".join(parts).replace(" ", "_")
+    # 윈도우/리눅스 파일명 금지 문자 제거
     for c in ('\\', '/', ':', '*', '?', '"', '<', '>', '|'):
         slug = slug.replace(c, "_")
     return slug
