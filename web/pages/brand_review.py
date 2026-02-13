@@ -132,9 +132,9 @@ def render() -> None:
                 if st.button("상세 보기", key=f"go_item_{original_idx}"):
                     # 상세 페이지로 이동 설정
                     st.session_state["pdf_review_item_index"] = original_idx
+                    st.session_state["navigate_from_brand_review"] = True  # 플래그 설정
                     if hasattr(st, "query_params"):
                         st.query_params["item"] = str(original_idx)
-                        # list 파라미터 제거하여 상세 모드로 진입하도록 함
                         if "list" in st.query_params:
                             del st.query_params["list"]
                     st.switch_page("pages/pdf_item_review.py")

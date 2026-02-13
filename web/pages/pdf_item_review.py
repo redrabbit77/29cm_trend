@@ -406,7 +406,20 @@ def render() -> None:
 
     # URL 쿼리 파라미터 우선 (브라우저 뒤로가기 시 목록으로 복귀되도록)
     selected = None
-    if hasattr(st, "query_params"):
+    
+    # 브랜드 리뷰 페이지 등에서 강제로 넘어온 경우 처리
+    if st.session_state.get("navigate_from_brand_review"):
+        forced_idx = st.session_state.get("pdf_review_item_index")
+        if forced_idx is not None:
+            selected = forced_idx
+            # URL 업데이트 (새로고침 시 유지)
+            if hasattr(st, "query_params"):
+                st.query_params["item"] = str(forced_idx)
+                if "list" in st.query_params:
+                    del st.query_params["list"]
+        st.session_state["navigate_from_brand_review"] = False  # 플래그 해제
+    
+    if selected is None and hasattr(st, "query_params"):
         q = st.query_params.get("item")
         if q is not None and q != "":
             try:
